@@ -1,105 +1,84 @@
-//const express = require('express');
-const mysql = require('mysql2');
-//const inputCheck = require('./utils/inputCheck');
-//const PORT = process.env.PORT || 3001;
-//const app = express();
+const inquirer = require('inquirer');
+const db = require('./db/connection');
 
-// Express middleware
-//app.use(express.urlencoded({ extended: false }));
-//app.use(express.json());
+function promptUser() {
+    inquirer.prompt([
+        {
+            type: "list",
+            name: "menu",
+            message: "What would you like to do?",
+            choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee']
+        }
+    ]).then(response => {
+        if (response.menu === 'View all departments') {
+            console.log('you chose to view all depts...');
+            viewDept();
+        }
+        if (response.menu === 'View all roles') {
+            console.log('you chose to view all Roles...');
+            viewRoles();
+        }
+        if (response.menu === 'View all employees') {
+            console.log('you chose to view all employees...');
+            viewEmp();
+        }
+        if (response.menu === 'Add a department') {
+            addDept();
+            console.log('you chose to add a dept...');
+        }
+        if (response.menu === 'Add a role') {
+            console.log('you chose to add a Role...');
+        }
+        if (response.menu === 'Add an employee') {
+            console.log('you chose to Add an employee...');
+        }
+    })
+};
 
-// Connect to database
-const db = mysql.createConnection(
-    {
-        host: 'localhost',
-        // Your MySQL username,
-        user: 'root',
-        // Your MySQL password
-        password: '',
-        database: 'employees'
-    },
-    console.log('Connected to the employees database.')
-);
+promptUser();
 
-// Get all candidates
-// app.get('/api/departments', (req, res) => {
-//     const sql = `SELECT * FROM departments`;
+//view all departments,
+function viewDept() {
+    const sql = `SELECT * FROM departments`;
+    db.query(sql, (err, rows) => {
+        console.table(rows)
+    });
+};
 
-//     db.query(sql, (err, rows) => {
-//         if (err) {
-//             res.status(500).json({ error: err.message });
-//             return;
-//         }
-//         res.json({
-//             message: 'success',
-//             data: rows
-//         });
-//     });
-// });
+//view all roles,
+function viewRoles() {
+    const sql = `SELECT * FROM roles`;
+    db.query(sql, (err, rows) => {
+        console.table(rows)
+    });
+};
 
+//view all employees
+function viewEmp() {
+    const sql = `SELECT * FROM employee`;
+    db.query(sql, (err, rows) => {
+        console.table(rows)
+    });
+};
 
-// // Get a single candidate
-// app.get('/api/departments/:id', (req, res) => {
-//     const sql = `SELECT * FROM departments WHERE id = ?`;
-//     const params = [req.params.id];
+// add a department,
+function addDept() {
 
-//     db.query(sql, params, (err, row) => {
-//         if (err) {
-//             res.status(400).json({ error: err.message });
-//             return;
-//         }
-//         res.json({
-//             message: 'success',
-//             data: row
-//         });
-//     });
-// });
+    const sql = `INSERT INTO departments (name) 
+             VALUES (?)`;
+    const params = [];
+    // inquirer.prompt([
+    //     {
+    //         type: "input",
+    //         name: "addDeptName",
+    //         message: "What is the name of the new department?"
+    //     }
+    // ]).then(response => {
+    //     console.log('hi');
+    // })
 
-// // Delete a candidate
-// app.delete('/api/departments/:id', (req, res) => {
-//     const sql = `DELETE FROM departments WHERE id = ?`;
-//     const params = [req.params.id];
+};
 
-//     db.query(sql, params, (err, result) => {
-//         if (err) {
-//             res.statusMessage(400).json({ error: res.message });
-//         } else if (!result.affectedRows) {
-//             res.json({
-//                 message: 'Department not found'
-//             });
-//         } else {
-//             res.json({
-//                 message: 'deleted',
-//                 changes: result.affectedRows,
-//                 id: req.params.id
-//             });
-//         }
-//     });
-// });
-
-// // Create a department
-// app.post('/api/departments', ({ body }, res) => {
-//     const errors = inputCheck(body, 'name',);
-//     if (errors) {
-//         res.status(400).json({ error: errors });
-//         return;
-//     }
-// });
-// Create a department
-// const sql = `INSERT INTO departments (id, name) 
-//               VALUES (?,?)`;
-// const params = [1, 'Media'];
-
-// db.query(sql, params, (err, result) => {
-//     if (err) {
-//         console.log(err);
-//     }
-//     console.log(result);
-// });
-// app.use((req, res) => {
-//     res.status(404).end();
-// });
-
-// app.listen(PORT, () => {
-//     console.log(`Server running on port ${PORT}`);
-// });
+//add a role,
+//add an employee, 
+//and update an employee role
