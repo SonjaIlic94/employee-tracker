@@ -1,13 +1,19 @@
 const inquirer = require('inquirer');
 const db = require('./db/connection');
 
+// db.connect({
+//     function() {
+//         promptUser()
+//     }
+// });
+
 function promptUser() {
     inquirer.prompt([
         {
             type: "list",
             name: "menu",
             message: "What would you like to do?",
-            choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee']
+            choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Quit']
         }
     ]).then(response => {
         if (response.menu === 'View all departments') {
@@ -28,20 +34,24 @@ function promptUser() {
         }
         if (response.menu === 'Add a role') {
             console.log('you chose to add a Role...');
+            addRole();
         }
         if (response.menu === 'Add an employee') {
             console.log('you chose to Add an employee...');
         }
+        if (response.menu === 'Quit') {
+            console.log('Logging out!');
+            db.end();
+        }
     })
 };
-
-promptUser();
 
 //view all departments,
 function viewDept() {
     const sql = `SELECT * FROM departments`;
     db.query(sql, (err, rows) => {
         console.table(rows)
+        promptUser();
     });
 };
 
@@ -50,6 +60,7 @@ function viewRoles() {
     const sql = `SELECT * FROM roles`;
     db.query(sql, (err, rows) => {
         console.table(rows)
+        promptUser();
     });
 };
 
@@ -63,22 +74,70 @@ function viewEmp() {
 
 // add a department,
 function addDept() {
-
-    const sql = `INSERT INTO departments (name) 
-             VALUES (?)`;
-    const params = [];
-    // inquirer.prompt([
-    //     {
-    //         type: "input",
-    //         name: "addDeptName",
-    //         message: "What is the name of the new department?"
-    //     }
-    // ]).then(response => {
-    //     console.log('hi');
-    // })
-
+    inquirer.prompt([
+        {
+            type: "input",
+            name: "deptName",
+            message: "What is the name of the new department?"
+        }
+    ]).then(response => {
+        const sql = `INSERT INTO departments(name) VALUES (?)`;
+        const params = [response.deptName];
+        db.query(sql, params, (err, rows) => {
+            if (err) {
+                console.log(err);
+            }
+            console.log('You have added a department called ' + response.deptName);
+            promptUser();
+        })
+    });
 };
 
-//add a role,
+
+//add a role
+function addRole() {
+    db.query("SELECT * FROM departments", function (err, res) {
+        if (err) throw err;
+
+        inquirer.prompt([
+            {
+                type: "input",
+                name: "roleTitle",
+                message: "What is the title of the new role?"
+            },
+            {
+                type: "input",
+                name: "roleSalary",
+                message: "What is the salary of the new role?"
+            },
+            {
+                type: "list",
+                name: "deptId",
+                message: "Choose a department for this role.",
+                choices: res.map(item => item.name)
+            }
+        ]).then(response => {
+            console.log(response);
+            const sql = `INSERT INTO roles(title, salary, department_id) VALUES (?,?,?)`;
+            const chosenDept = res.find(dept => dept.name === response.deptId);
+            console.log(chosenDept);
+            const params = [response.roleTitle, response.roleSalary, chosenDept.id];
+            db.query(sql, params, (err, rows) => {
+                if (err) {
+                    console.log(err)
+                }
+            })
+            console.log("New role added");
+            promptUser();
+        })
+    })
+};
+
+// Add an employee
+
+
+promptUser();
+
 //add an employee, 
+//inside emp do db.query roles table
 //and update an employee role
