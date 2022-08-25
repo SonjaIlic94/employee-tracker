@@ -1,12 +1,6 @@
 const inquirer = require('inquirer');
 const db = require('./db/connection');
 
-// db.connect({
-//     function() {
-//         promptUser()
-//     }
-// });
-
 function promptUser() {
     inquirer.prompt([
         {
@@ -17,27 +11,22 @@ function promptUser() {
         }
     ]).then(response => {
         if (response.menu === 'View all departments') {
-            console.log('you chose to view all depts...');
             viewDept();
         }
         if (response.menu === 'View all roles') {
-            console.log('you chose to view all Roles...');
             viewRoles();
         }
         if (response.menu === 'View all employees') {
-            console.log('you chose to view all employees...');
             viewEmp();
         }
         if (response.menu === 'Add a department') {
             addDept();
-            console.log('you chose to add a dept...');
         }
         if (response.menu === 'Add a role') {
-            console.log('you chose to add a Role...');
             addRole();
         }
         if (response.menu === 'Add an employee') {
-            console.log('you chose to Add an employee...');
+            addEmp();
         }
         if (response.menu === 'Quit') {
             console.log('Logging out!');
@@ -69,10 +58,11 @@ function viewEmp() {
     const sql = `SELECT * FROM employee`;
     db.query(sql, (err, rows) => {
         console.table(rows)
+        promptUser();
     });
 };
 
-// add a department,
+// Add a department,
 function addDept() {
     inquirer.prompt([
         {
@@ -93,12 +83,10 @@ function addDept() {
     });
 };
 
-
-//add a role
+// Add a role
 function addRole() {
     db.query("SELECT * FROM departments", function (err, res) {
         if (err) throw err;
-
         inquirer.prompt([
             {
                 type: "input",
@@ -134,10 +122,51 @@ function addRole() {
 };
 
 // Add an employee
+function addEmp() {
+    db.query("SELECT * FROM roles", function (err, res) {
+        if (err) throw err;
+        inquirer.prompt([
+            {
+                type: "input",
+                name: "empFirstName",
+                message: "What is the first name of the new employee?"
+            },
+            {
+                type: "input",
+                name: "empLastName",
+                message: "What is the last name of the new employee?"
+            },
+            {
+                type: "list",
+                name: "roleId",
+                message: "Choose a role for this employee.",
+                choices: res.map(item => item.title)
+            },
+            {
+                type: "list",
+                name: "managerId",
+                message: "Who is the employees manager?.",
+                choices: res.map(item => item.id)
+            }
 
+        ]).then(response => {
+            console.log(res.map(item => item.role_id));
+            console.log('hello');
+            console.log(response);
+            const sql = `INSERT INTO employee(first_name, last_name, role_id, manager_id) VALUES (?,?,?,?)`;
+            const chosenRole = res.find(roles => roles.title === response.roleId);
+            const chosenManager = res.find(roles => roles.id === response.managerId);
+            console.log(chosenRole);
+            const params = [response.empFirstName, response.empLastName, chosenRole.id, chosenManager.id];
+            db.query(sql, params, (err, rows) => {
+                if (err) {
+                    console.log(err)
+                }
+            })
+            console.log("New employee added");
+            promptUser();
+        })
+    })
+};
 
 promptUser();
-
-//add an employee, 
-//inside emp do db.query roles table
-//and update an employee role
